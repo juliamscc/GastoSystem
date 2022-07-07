@@ -154,7 +154,7 @@ def get_total_expenses_ajax(request):
 
   return JsonResponse(response, status = 200)
 
-from expenses.forms import ExpenseForm
+from expenses.forms import ExpenseForm, LimitForm
 from django.template.loader import render_to_string
 
 def create_expense(request):
@@ -203,10 +203,36 @@ def handle_category(request):
 
 def handle_limit(request):
   title = 'Inserir Limite'
+  context_extra = {}
+  if request.POST.get('action') == 'post':
+    form = LimitForm(request.POST)
+    
+    if form.is_valid():
+      model = form.save(commit=False)
+      model.save()
+      context_extra = {
+          'response' : 'Criado com sucesso!',
+          'error': False,
+      }
+    else:
+      context_extra = {
+          'response' : 'Erros ocorreram!',
+          'error': True
+      }
+   
+  else:
+        form = LimitForm()
+  context = {
+    'form': form,
+  }
+  
+  html_page = render_to_string('expenses/form/handle-limit.html', context)
+  
   response = {
     'title' : title,
-    'html' : 'a fazer...',
-    
+    'html' : html_page,
+    'response' : context_extra['response'] if 'response' in context_extra else None,
+    'error': context_extra['error'] if 'error' in context_extra else None,
   }
   return JsonResponse(response, status = 200)
 
