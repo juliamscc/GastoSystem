@@ -27,3 +27,10 @@ class ExpenseForm(forms.ModelForm):
     #         raise ValidationError("É obrigatório adicionar o treinador.")
 
     #     return data
+
+from expenses.models import Payment
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = '__all__'
