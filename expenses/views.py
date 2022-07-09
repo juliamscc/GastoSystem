@@ -1,6 +1,11 @@
-from multiprocessing import context
+from calendar import month
 from django.shortcuts import render,redirect
 from django.urls import reverse
+from django.http import JsonResponse
+from expenses.forms import ExpenseForm, LimitForm
+from django.template.loader import render_to_string
+
+from django.views.decorators.csrf import csrf_exempt
 
 from expenses.forms import SelectCategoryForm
 from expenses.models import *
@@ -68,7 +73,6 @@ def home(request,page=None):
     current_page = request.session.get('session_page')
 
   num_pages = math.ceil(count_expenses/NUMBER_ITENS)
-  print(current_page)
   if(current_page>num_pages):
     return redirect(reverse('expenses:home', kwargs={'page': num_pages}))
   if (current_page<1):
@@ -88,6 +92,17 @@ def home(request,page=None):
   # else:
   #   list_item_expenses = Expense.objects.all()
   
+  
+  # para ja vir com a porcentagem de limite utilizado definida no primeiro load da tela
+  expense_last = Expense.objects.all().order_by('-date').first()
+
+  total = Expense.objects.filter(date__month=expense_last.date.month,date__year=expense_last.date.year).aggregate(total=Sum('value'))
+  limit = None
+  if Limit.objects.filter(month=expense_last.date.month,year=expense_last.date.year).exists():
+    limit = Limit.objects.get(month=expense_last.date.month,year=expense_last.date.year).value
+  total_expenses = total['total']
+  percent = int(100*total_expenses/limit) if limit is not None else '??'
+
   context = {
      'page_selected': "home",
      'total_current_month': total_current_month['total'],
@@ -97,7 +112,8 @@ def home(request,page=None):
      'list_month_year_select': list_month_year_select,
      'list_item_expenses': list_item_expenses,
      'num_pages': num_pages,
-     'current_page': current_page
+     'current_page': current_page,
+     'percent': percent
 
   }
   return render(request,"expenses/main.html", context)
@@ -116,7 +132,7 @@ def report(request):
   return render(request,"expenses/report.html", context)
 
 
-
+@csrf_exempt
 def list_expenses_by_category(request):
   if request.method == 'POST':
     form = SelectCategoryForm(request.POST)
@@ -135,7 +151,7 @@ def list_expenses_by_category(request):
   }
   return render(request,'expenses/list-expenses-by-category.html',context)
 
-from django.http import JsonResponse
+@csrf_exempt
 def get_total_expenses_ajax(request):
   if (request.method == 'GET'):
     values = request.GET['value'].split('-')
@@ -151,12 +167,9 @@ def get_total_expenses_ajax(request):
       'data':total_expenses,
       'percent':f'{percent} %'
     }
+    return JsonResponse(response, status = 200)
 
-  return JsonResponse(response, status = 200)
-
-from expenses.forms import ExpenseForm, LimitForm
-from django.template.loader import render_to_string
-
+@csrf_exempt
 def create_expense(request):
   title = 'Inserir Gasto'
   context_extra = {}
@@ -200,10 +213,11 @@ def handle_category(request):
   }
   return JsonResponse(response, status = 200)
 
-
+@csrf_exempt
 def handle_limit(request):
   title = 'Inserir Limite'
   context_extra = {}
+    
   if request.POST.get('action') == 'post':
     form = LimitForm(request.POST)
     
@@ -218,14 +232,24 @@ def handle_limit(request):
       context_extra = {
           'response' : 'Erros ocorreram!',
           'error': True
-      }
-   
-  else:
-        form = LimitForm()
+      }   
+  else: 
+    exists = False
+    year = request.GET['year']
+    month = request.GET['month']
+
+    _limit = Limit(month=month, year=year)
+
+    # verificando se já existe limite para esse mês e ano para mandar os campos já preenchidos
+    exists = Limit.objects.filter(month=month, year=year).exists()
+    if exists:
+      _limit = Limit.objects.get(month=month, year=year)
+
+    form = LimitForm(instance=_limit)
+
   context = {
     'form': form,
   }
-  
   html_page = render_to_string('expenses/form/handle-limit.html', context)
   
   response = {

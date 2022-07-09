@@ -6,7 +6,7 @@
 {% endblock %}
 {% block display-values %}
     <div class="total"><p>R$</p><p id="total_by_month">{% if not total_current_month %}0,00{% else %}{{ total_current_month|floatformat:2 }}{% endif %}</p></div>
-    <div class="limit"><div class="icon-limit svg-white"><img src="{% static 'expenses/img/icon/arrow-trend-up-solid.svg' %}" /></div><p id="limit_percent_by_month">??%</p></div>
+    <div class="limit"><div class="icon-limit svg-white"><img src="{% static 'expenses/img/icon/arrow-trend-up-solid.svg' %}" /></div><p id="limit_percent_by_month">{{percent}}%</p></div>
 {% endblock %}
 
 
@@ -28,7 +28,13 @@
                 <p>Inserir ou Alterar</p>
             </div>
             <div class="btn-actions">
-                <div class="btn btn-red action-modal" data-action="handle-limit">
+                <div
+                 class="btn btn-red action-modal"
+                 data-action="handle-limit"
+                 data-limit="btn-limit-modal"
+                 data-year="{{current_year}}"
+                 data-month="{{current_month_number}}"
+                >
                     <img class="svg-white" src="{% static 'expenses/img/icon/arrow-trend-up-solid.svg' %}" />
                 </div>  
                 <div class="btn btn-gray action-modal" data-action="create-expense">
@@ -87,6 +93,11 @@
     {% include "expenses/modal.html" %}
     <script>
         $(document).ready(function(){
+            // limpando valores de ano e mes selecionado do sessionStorage
+            sessionStorage.removeItem('year');
+            sessionStorage.removeItem('month');
+
+
             $('select').on('change', function (e) {
                 var optionSelected = $("option:selected", this);
                 var valueSelected = this.value;
@@ -113,6 +124,12 @@
                         console.log("Error", response)
                     }
                 })
+
+                // setando a data e mes selecionando para modal de limit
+                const year = valueSelected.split('-')[1];
+                const month = valueSelected.split('-')[0];
+                sessionStorage.year = year;
+                sessionStorage.month = month;
             });
             
             //controle de modal
@@ -147,6 +164,16 @@
                     }
                 }
 
+                // isso é para pegar o ano e mês selecionado ao abrir o modal de adicionar limite
+                if($(this).data().limit) {
+                    let year = sessionStorage.getItem('year');
+                    let month = sessionStorage.getItem('month');
+                    new_data = {
+                        ...new_data,
+                        year: year !== null ? year : $(this).data().year,
+                        month: month !== null ? month : $(this).data().month
+                    }
+                }
 
                 $.ajax({
                     type: 'GET',
@@ -165,10 +192,8 @@
                         console.log("Error", response)
                     }
                     
-                });
-                
-            });
-            
+                });       
+            });            
         });
     </script>
 {% endblock %}

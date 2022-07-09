@@ -59,7 +59,7 @@
             url: "{% url 'expenses:handle_limit' %}",
             data: {
                 value : $('#id_value').val(),
-                year : $('#id_date').val(),
+                year : $('#id_year').val(),
                 month : $('#id_month').val(),
                 csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
                 action: 'post'
