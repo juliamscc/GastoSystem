@@ -131,6 +131,12 @@ def report(request):
   }
   return render(request,"expenses/report.html", context)
 
+def expenses_by_period(request):
+  context = {
+    'page_selected': "report",
+  }
+
+  return render(request, "expenses/reports/expenses-by-period.html", context)
 
 @csrf_exempt
 def list_expenses_by_category(request):

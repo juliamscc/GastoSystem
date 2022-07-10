@@ -19,7 +19,10 @@ urlpatterns = [
     path('handle/limit', handle_limit, name="handle_limit"),
     path('handle/payment', handle_payment, name="handle_payment"),
     path('handle/category', handle_category, name="handle_category"),
-    path('edit/expense',edit_expense,name="edit_expense")
+    path('edit/expense',edit_expense,name="edit_expense"),
+
+    #report
+    path('report/expenses-by-period', expenses_by_period,name="expenses_by_period"),
 
     
 ]

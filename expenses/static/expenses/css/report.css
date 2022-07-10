@@ -1,0 +1,24 @@
+.report-container {
+  width: 98%;
+  margin: auto;
+}
+
+.report-container h1 {
+  color: var(--color-gray);
+}
+
+.report-links {
+  width: 98%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-link {
+  width: 100%;
+  margin: 1%;
+}
+
+.report-link > a {
+  text-decoration: none;
+}
