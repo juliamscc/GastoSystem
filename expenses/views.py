@@ -194,7 +194,7 @@ def create_expense(request):
           'response' : 'Erros ocorreram!',
           'error': True
       }
-
+   
   else:
         form = ExpenseForm()
   context = {
@@ -266,43 +266,25 @@ def handle_limit(request):
   }
   return JsonResponse(response, status = 200)
 
-from expenses.forms import PaymentForm
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
 def handle_payment(request):
   title = 'Inserir Forma de Pagamento'
-  context_extra = {}
-  response = {}
-  try:
-    if request.POST.get('action') == 'post':
-      form = PaymentForm(request.POST)
-      
-      if form.is_valid():
-        model = form.save(commit=False)
-        model.save()
-        context_extra = {
-            'response' : 'Criado com sucesso!',
-            'error': False,
-        }
-      else:
-        context_extra = {
-            'response' : 'Erros ocorreram!',
-            'error': True
-        }
+  response = {
+    'title' : title,
+    'html' : 'a fazer...',
+    
+  }
+  return JsonResponse(response, status = 200)
 
-    else:
-          form = PaymentForm()
-    context = {
-      'form': form,
-    }
-    html_page = render_to_string('expenses/form/new-payment.html', context)
-    response = {
-      'title' : title,
-      'html' : html_page,
-      'response' : context_extra['response'] if 'response' in context_extra else None,
-      'error': context_extra['error'] if 'error' in context_extra else None,
-    }
-  except Exception as e:
-    print(e)
+def edit_expense(request):
+  title = 'Alterar Gasto'
+  expense = Expense.objects.get(id=request.GET['id'])
+  context = {
+    'expense': expense,
+  }
+  html_page = render_to_string('expenses/form/edit-expense.html', context)
+  response = {
+    'title' : title,
+    'html' : html_page,
+    
+  }
   return JsonResponse(response, status = 200)
