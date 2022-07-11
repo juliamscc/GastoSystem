@@ -266,13 +266,42 @@ def handle_limit(request):
   }
   return JsonResponse(response, status = 200)
 
+@csrf_exempt
 def handle_payment(request):
   title = 'Inserir Forma de Pagamento'
-  response = {
-    'title' : title,
-    'html' : 'a fazer...',
-    
-  }
+  context_extra = {}
+  response = {}
+  try:
+    if request.POST.get('action') == 'post':
+      form = PaymentForm(request.POST)
+      
+      if form.is_valid():
+        model = form.save(commit=False)
+        model.save()
+        context_extra = {
+            'response' : 'Criado com sucesso!',
+            'error': False,
+        }
+      else:
+        context_extra = {
+            'response' : 'Erros ocorreram!',
+            'error': True
+        }
+
+    else:
+          form = PaymentForm()
+    context = {
+      'form': form,
+    }
+    html_page = render_to_string('expenses/form/new-payment.html', context)
+    response = {
+      'title' : title,
+      'html' : html_page,
+      'response' : context_extra['response'] if 'response' in context_extra else None,
+      'error': context_extra['error'] if 'error' in context_extra else None,
+    }
+  except Exception as e:
+    print(e)
   return JsonResponse(response, status = 200)
 
 def edit_expense(request):
