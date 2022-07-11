@@ -2,7 +2,7 @@ from calendar import month
 from django.shortcuts import render,redirect
 from django.urls import reverse
 from django.http import JsonResponse
-from expenses.forms import ExpenseForm, LimitForm
+from expenses.forms import ExpenseForm, LimitForm, PaymentForm
 from django.template.loader import render_to_string
 
 from django.views.decorators.csrf import csrf_exempt
