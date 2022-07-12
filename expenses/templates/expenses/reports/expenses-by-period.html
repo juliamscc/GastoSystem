@@ -9,6 +9,125 @@
 <div class="report-container">
   <h1>Visualizar gastos por período de tempo</h1>
   <hr />
- 
+  <div>
+    <div class="selection">
+      <form action="" request="POST" id="formSelectDates">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <span>De</span>
+          <select style="width: 130px;" id="list_start">
+              {% for item in list_month_year_select %}
+                  <option value="{{ item.month_number }}-{{ item.year }}" id="date-start">{{ item.year }}/{{ item.month|title }}</option>
+              {% endfor %}
+          </select>
+          <span>a</span>
+          <select style="width: 130px;" id="list_end">
+            {% for item in list_month_year_select %}
+                <option value="{{ item.month_number }}-{{ item.year }}" id="date-end">{{ item.year }}/{{ item.month|title }}</option>
+            {% endfor %}
+          </select>
+        <button class="btn btn-gray sub white small " type="submit" value="Enviar">Buscar</button>
+        {% for item in expenses %}
+        <div class="line-item">
+            <p class="col-1">{{ item.date|date:"d/m/Y" }}</p>
+            <p class="col-3">{{ item.description }}</p>
+            <p class="col-1">{{ item.category.description|title }}</p>
+            <p class="col-1">{{ item.payment.description|title }}</p>
+            <p class="col-1">R$ {{ item.value|floatformat:2 }}</p>
+            <div class="action-item col-1">
+                <div class="btn-inline">
+                    <img class="svg-red" src="{% static 'expenses/img/icon/trash-can-solid.svg' %}" />
+                </div>
+                <div class="btn-inline action-modal" data-action="edit-category" data-id="{{ item.id }}">
+                    <img src="{% static 'expenses/img/icon/edit-solid.svg' %}" />
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+      </form>
+  </div>
+    
+  
+  </div>
 </div>
+<script src="{% static 'expenses/js/jquery-3.6.0.min.js' %}"/></script>
+
+<script>
+    $(document).ready(function(){
+      $(".output").hide();
+      var csrftoken = getCookie('csrftoken');
+      function csrfSafeMethod(method) {
+          // these HTTP methods do not require CSRF protection
+          return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      $.ajaxSetup({
+          beforeSend: function (xhr, settings) {
+              if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+              }
+          }
+      });
+      function sameOrigin(url) {
+  
+      var host = document.location.host;
+      var protocol = document.location.protocol;
+      var sr_origin = '//' + host;
+      var origin = protocol + sr_origin;
+  
+      return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+      (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+  
+      !(/^(\/\/|http:|https:).*/.test(url));
+      }
+  
+      function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie != '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+          var cookie = jQuery.trim(cookies[i]);
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) == (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+          }
+      }
+      }
+      return cookieValue;
+      }
+
+      var date_start = document.getElementById('date-start').value
+      var date_end = document.getElementById('date-end').value
+
+      $('#date-end').on('change', function(e) {
+        date_end = document.getElementById('date-end').value
+      })
+
+      $('#date-start').on('change', function(e) {
+        date_start = document.getElementById('date-start').value
+      })
+
+
+      $('#formSelectDates').on('submit', function(e){     
+          e.preventDefault();
+          $.ajax({
+              type : "POST", 
+              url: "{% url 'expenses:expenses_by_period' %}",
+              data: {
+                  date_start,
+                  date_end,
+                  action: 'post'
+              },
+              
+              success: function(data){
+                  console.log(data)
+              },
+          
+              failure: function() {
+                  
+              }
+          });
+      }); 
+  })
+</script>
 {% endblock %}

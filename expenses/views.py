@@ -11,7 +11,7 @@ from expenses.forms import SelectCategoryForm
 from expenses.models import *
 
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Sum, Max, Min
 import math 
 NUMBER_ITENS = 6
 
@@ -31,6 +31,14 @@ def get_month_by_number(month):
     12: "dezembro",
   }
   return dict_month[month]
+
+
+def return_list_of_months_and_years_formated():
+      today = datetime.now()
+      expense_first = Expense.objects.all().order_by('date').first()
+      list_month_year_select = build_list_month_year(expense_first.date,today)
+
+      return list_month_year_select
 
 
 def build_list_month_year(start_date, end_date):
@@ -132,8 +140,33 @@ def report(request):
   return render(request,"expenses/report.html", context)
 
 def expenses_by_period(request):
+  list_month_year_select = return_list_of_months_and_years_formated()
+  start_month = list_month_year_select[0]['month_number']
+  start_year = list_month_year_select[0]['year']
+  end_month = list_month_year_select[0]['month_number']
+  end_year = list_month_year_select[0]['year']
+  expenses = []
+
+  if request.method == 'POST':
+    date_start = request.POST['date_start'].split('-')
+    date_end = request.POST['date_end'].split('-')
+    start_month = date_start[0]
+    start_year = date_start[1]
+    end_month = date_end[0]
+    end_year = date_end[1]
+
+    expenses = Expense.objects.filter(date__gte=f'{start_year}-{start_month}-01')
+
+    expenses = expenses.filter(date__lte=f'{end_year}-{end_month}-28')
+  else :
+    expenses = Expense.objects.filter(date__gte=f'{start_year}-{start_month}-01')
+
+    expenses = expenses.filter(date__lte=f'{end_year}-{end_month}-28')
+
   context = {
     'page_selected': "report",
+    'list_month_year_select': list_month_year_select,
+    'expenses': expenses
   }
 
   return render(request, "expenses/reports/expenses-by-period.html", context)
