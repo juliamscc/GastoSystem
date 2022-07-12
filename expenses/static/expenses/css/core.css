@@ -233,6 +233,7 @@ select {
 }
 .btn-actions > .btn{
     width: 1.225em;
+    cursor: pointer;
 }
 
 .btn{
@@ -339,6 +340,7 @@ select {
 
 .action-item > .btn-inline > img{
     width: 22.5%;
+    cursor: pointer;
 }
 
 .line-item{
