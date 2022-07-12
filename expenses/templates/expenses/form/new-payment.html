@@ -1,3 +1,5 @@
+{% load static %}
+
 <form method="POST" id="formPayment">
     {% csrf_token %}
     {{ form.as_p }}
@@ -91,3 +93,28 @@
         modalOverlay.classList.toggle("closed");
     });
 </script>
+
+    <div class="description-top">
+        <p>Alterar Forma de Pagamento</p>
+    </div>
+    <div class="description-itens">
+        <p class="col-1"></p>
+        <p class="col-3">Descrição</p>
+        <p class="col-3"></p>
+        <p class="col-1">Ação</p>
+    </div>
+    <div>
+        {% for item in list_item_payment %}
+        <div class="line-item">
+            <p class="col-1"></p>
+            <p class="col-3">{{ item.description }}</p>
+            <p class="col-2"></p>
+            <p class="col-2"></p>
+            <div class="action-item col-1">
+                <div class="btn-inline">
+                    <img class="svg-red" src="{% static 'expenses/img/icon/trash-can-solid.svg' %}" />
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>

@@ -271,6 +271,9 @@ def handle_payment(request):
   title = 'Inserir Forma de Pagamento'
   context_extra = {}
   response = {}
+
+  list_item_payment = Payment.objects.all()
+  print(list_item_payment)
   try:
     if request.POST.get('action') == 'post':
       form = PaymentForm(request.POST)
@@ -292,6 +295,7 @@ def handle_payment(request):
           form = PaymentForm()
     context = {
       'form': form,
+      'list_item_payment': list_item_payment,
     }
     html_page = render_to_string('expenses/form/new-payment.html', context)
     response = {
