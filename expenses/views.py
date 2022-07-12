@@ -67,10 +67,6 @@ def home(request,page=None):
   today = datetime.now()
   current_month = today.month
   current_year = today.year
-  #print("Data de Hoje",current_month,current_year)
-  total_current_month = Expense.objects.filter(date__month=current_month,date__year=current_year).aggregate(total=Sum('value'))
-  #print("Total do Mes corrent", total_current_month)
-  #print(get_month_by_number(1))
   expense_first = Expense.objects.all().order_by('date').first()
   list_month_year_select = build_list_month_year(expense_first.date,today)
   count_expenses = Expense.objects.all().count()
@@ -102,15 +98,19 @@ def home(request,page=None):
   
   
   # para ja vir com a porcentagem de limite utilizado definida no primeiro load da tela
-  expense_last = Expense.objects.all().order_by('-date').first()
+  first_date_in_list_of_dates = return_list_of_months_and_years_formated()[0]
+  _month = first_date_in_list_of_dates['month_number']
+  _year = first_date_in_list_of_dates['year']
 
-  total = Expense.objects.filter(date__month=expense_last.date.month,date__year=expense_last.date.year).aggregate(total=Sum('value'))
+  total = Expense.objects.filter(date__month=_month,date__year=_year).aggregate(total=Sum('value'))
   limit = None
-  if Limit.objects.filter(month=expense_last.date.month,year=expense_last.date.year).exists():
-    limit = Limit.objects.get(month=expense_last.date.month,year=expense_last.date.year).value
+  if Limit.objects.filter(month=_month,year=_year).exists():
+    limit = Limit.objects.get(month=_month,year=_year).value
   total_expenses = total['total']
   percent = int(100*total_expenses/limit) if limit is not None else '??'
-
+  
+  total_current_month = total
+    
   context = {
      'page_selected': "home",
      'total_current_month': total_current_month['total'],
@@ -122,7 +122,6 @@ def home(request,page=None):
      'num_pages': num_pages,
      'current_page': current_page,
      'percent': percent
-
   }
   return render(request,"expenses/main.html", context)
   # return render(request,"base.html", context={})
@@ -196,12 +195,13 @@ def get_total_expenses_ajax(request):
     values = request.GET['value'].split('-')
     month_selected = values[0]
     year_selected = values[1]
-    total = Expense.objects.filter(date__month=month_selected,date__year=year_selected).aggregate(total=Sum('value'))
+    total = Expense.objects.filter(date__month=int(month_selected),date__year=int(year_selected)).aggregate(total=Sum('value'))
     total_expenses = total['total']
     percent = '??'
-    if Limit.objects.filter(month=month_selected,year=year_selected).exists():
+    if Limit.objects.filter(month=month_selected,year=year_selected).exists() and total_expenses is not None:
       limit = Limit.objects.get(month=month_selected,year=year_selected).value
       percent = int(100*total_expenses/limit)
+    
     response = {
       'data':total_expenses,
       'percent':f'{percent} %'
