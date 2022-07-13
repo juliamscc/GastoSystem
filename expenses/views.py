@@ -360,12 +360,13 @@ def edit_expense(request):
 def delete_expense(request):
   title = 'Deseja relamente deletar o gasto?'
   context_extra = {}
-  context = {}
-  print(request.GET)
+  context = {
+    'id': request.GET.get('id')
+  }
   if request.GET.get('action') == 'delete':
      id = request.GET.get('id')
 
-     Expense.objects.delete(id=id)
+     Expense.objects.filter(id=id).delete()
      context_extra = {
           'response' : 'Deletado com sucesso!',
           'error': False,
