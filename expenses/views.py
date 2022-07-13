@@ -209,7 +209,7 @@ def create_expense(request):
   }
   return JsonResponse(response, status = 200)
 
-
+@csrf_exempt
 def handle_category(request):
   title = 'Inserir Categoria'
   context_extra = {}
