@@ -20,6 +20,7 @@ urlpatterns = [
     path('handle/payment', handle_payment, name="handle_payment"),
     path('handle/category', handle_category, name="handle_category"),
     path('edit/expense',edit_expense,name="edit_expense"),
+    path('delete/payment', delete_payment, name="delete_payment"),
 
     #report
     path('report/expenses-by-period', expenses_by_period,name="expenses_by_period"),
