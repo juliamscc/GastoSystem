@@ -1,11 +1,9 @@
-{% load static %}
-
-<form method="POST" id="formPayment">
+<form method="GET" id="formDeletePayment">
     {% csrf_token %}
     {{ form.as_p }}
     <div class="btn-position-modal">
         <input type="button" class="btn btn-red sub white small "  id="cancelModal" value="Cancelar">
-        <input class="btn btn-gray sub white small " type="submit" value="Enviar">
+        <input class="btn btn-gray sub white small " type="submit" value="Sim">
     </div>
     
 </form>
@@ -52,23 +50,27 @@
     }
     return cookieValue;
     }
-    $('#formPayment').on('submit', function(e){     
+    $('#formDeletePayment').on('submit', function(e){     
         e.preventDefault();
         
         
         $.ajax({
-            type : "POST", 
-            url: "{% url 'expenses:handle_payment' %}",
+            type : "GET", 
+            url: "{% url 'expenses:delete_payment' %}",
             data: {
-                description : $('#id_description').val(),
                 csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-                action: 'post'
+                action: 'delete',
+                id: '{{id}}'
             },
             
             success: function(data){
                 $('.modal-content').html(data.html);
                 $('.output').text(data.response);
                 $(".output").show();
+
+                setTimeout(() => {
+                    $('#cancelModal').click()
+                }, 2000)
             },
         
             failure: function() {
@@ -93,28 +95,3 @@
         modalOverlay.classList.toggle("closed");
     });
 </script>
-
-    <div class="description-top">
-        <p>Alterar Forma de Pagamento</p>
-    </div>
-    <div class="description-itens">
-        <p class="col-1"></p>
-        <p class="col-3">Descrição</p>
-        <p class="col-3"></p>
-        <p class="col-1">Ação</p>
-    </div>
-    <div>
-        {% for item in list_item_payment %}
-        <div class="line-item">
-            <p class="col-1"></p>
-            <p class="col-3">{{ item.description }}</p>
-            <p class="col-2"></p>
-            <p class="col-2"></p>
-            <div class="action-item col-1">
-                <div class="btn-inline action-modal" data-action="delete-payment" data-id="{{ item.id }}">
-                    <img class="svg-red" src="{% static 'expenses/img/icon/trash-can-solid.svg' %}" />
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>

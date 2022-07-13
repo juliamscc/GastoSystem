@@ -310,6 +310,9 @@ def handle_payment(request):
   title = 'Inserir Forma de Pagamento'
   context_extra = {}
   response = {}
+
+  list_item_payment = Payment.objects.all()
+  print(list_item_payment)
   try:
     if request.POST.get('action') == 'post':
       form = PaymentForm(request.POST)
@@ -331,6 +334,7 @@ def handle_payment(request):
           form = PaymentForm()
     context = {
       'form': form,
+      'list_item_payment': list_item_payment,
     }
     html_page = render_to_string('expenses/form/new-payment.html', context)
     response = {
@@ -355,6 +359,31 @@ def edit_expense(request):
     'html' : html_page,
     
   }
+  return JsonResponse(response, status = 200)
+
+def delete_payment(request):
+  title = 'Deseja realmente deletar esta forma de pagamento?'
+  context_extra = {}
+  context = {
+    'id': request.GET.get('id')
+  }
+  if request.GET.get('action') == 'delete':
+    id = request.GET.get('id')
+
+    Expense.objects.filter(id=id).delete()
+    context_extra = {
+          'response' : 'Deletado com sucesso!',
+          'error': False,
+    }
+
+  html_page = render_to_string('expenses/form/delete-payment.html', context)
+  response = {
+    'title' : title,
+    'html' : html_page,
+    'response' : context_extra['response'] if 'response' in context_extra else None,
+    'error': context_extra['error'] if 'error' in context_extra else None,
+  }
+
   return JsonResponse(response, status = 200)
 
 def delete_expense(request):
