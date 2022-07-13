@@ -253,7 +253,6 @@ def handle_category(request):
   title = 'Inserir Categoria'
   context_extra = {}
   lista_category = Category.objects.all()
-  print(lista_category)
 
   if request.POST.get('action') == 'post':
     form = CategoryForm(request.POST)
@@ -342,7 +341,6 @@ def handle_payment(request):
   response = {}
 
   list_item_payment = Payment.objects.all()
-  print(list_item_payment)
   try:
     if request.POST.get('action') == 'post':
       form = PaymentForm(request.POST)
