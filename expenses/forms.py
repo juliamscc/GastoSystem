@@ -1,16 +1,22 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from expenses.models import Category
+#from expenses.models import Category
 
-class SelectCategoryForm(forms.Form):
-    category = forms.ModelChoiceField(label="Categoria",queryset=Category.objects.all())
+#class SelectCategoryForm(forms.Form):
+   # category = forms.ModelChoiceField(label="Categoria",queryset=Category.objects.all())
 
 from expenses.models import Expense
 from expenses.models import Limit
 from expenses.models import Payment
+from expenses.models import Category 
 
 from django.core.exceptions import ValidationError
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = '__all__'
 
 
 class ExpenseForm(forms.ModelForm):
