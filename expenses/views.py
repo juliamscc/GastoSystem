@@ -107,7 +107,7 @@ def home(request,page=None):
   if Limit.objects.filter(month=_month,year=_year).exists():
     limit = Limit.objects.get(month=_month,year=_year).value
   total_expenses = total['total']
-  percent = int(100*total_expenses/limit) if limit is not None else '??'
+  percent = int(100*total_expenses/limit) if limit is not None and total_expenses is not None else '??'
   
   total_current_month = total
     
