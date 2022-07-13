@@ -1,6 +1,21 @@
 {% extends "base.html" %}
-{% load static %}
-{% block title %}Relatórios{% endblock %}
+{% load static %} 
+{% block title %}Relatórios
+{%endblock %} 
+{% block style %}
+<link href="{% static 'expenses/css/reports.css' %}" rel="stylesheet" />
+{% endblock %}
 {% block content %}
-    Contéudo de relatório...
+<div class="reports-container">
+  <h1>Relatórios</h1>
+  <hr />
+  <div class="reports-links">
+    <div class="reports-link"> <a href="expenses-by-period">> Visualizar gastos por período de tempo</a></div>
+    <div class="reports-link"> <a href="#">> Calcular gasto por período de tempo em determinada categoria</a></div>
+    <div class="reports-link"> <a href="#">> Visualizar categoria de maior gasto em determinado período de tempo</a></div>
+    <div class="reports-link"> <a href="#">> Visualizar gasto por categoria e total geral</a></div>
+    <div class="reports-link"> <a href="#">> Visualizar maior despesa por categoria de gasto</a></div>
+    <div class="reports-link"> <a href="#">> Visualizar gastos, limite e estatus do limite do mês atual</a></div>
+  </div>
+</div>
 {% endblock %}

@@ -1,11 +1,17 @@
+from calendar import month
 from django.shortcuts import render,redirect
 from django.urls import reverse
+from django.http import JsonResponse
+from expenses.forms import ExpenseForm, LimitForm, PaymentForm
+from django.template.loader import render_to_string
+
+from django.views.decorators.csrf import csrf_exempt
 
 from expenses.forms import SelectCategoryForm
 from expenses.models import *
 
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Sum, Max, Min
 import math 
 NUMBER_ITENS = 6
 
@@ -25,6 +31,14 @@ def get_month_by_number(month):
     12: "dezembro",
   }
   return dict_month[month]
+
+
+def return_list_of_months_and_years_formated():
+      today = datetime.now()
+      expense_first = Expense.objects.all().order_by('date').first()
+      list_month_year_select = build_list_month_year(expense_first.date,today)
+
+      return list_month_year_select
 
 
 def build_list_month_year(start_date, end_date):
@@ -53,10 +67,6 @@ def home(request,page=None):
   today = datetime.now()
   current_month = today.month
   current_year = today.year
-  #print("Data de Hoje",current_month,current_year)
-  total_current_month = Expense.objects.filter(date__month=current_month,date__year=current_year).aggregate(total=Sum('value'))
-  #print("Total do Mes corrent", total_current_month)
-  #print(get_month_by_number(1))
   expense_first = Expense.objects.all().order_by('date').first()
   list_month_year_select = build_list_month_year(expense_first.date,today)
   count_expenses = Expense.objects.all().count()
@@ -67,7 +77,6 @@ def home(request,page=None):
     current_page = request.session.get('session_page')
 
   num_pages = math.ceil(count_expenses/NUMBER_ITENS)
-  print(current_page)
   if(current_page>num_pages):
     return redirect(reverse('expenses:home', kwargs={'page': num_pages}))
   if (current_page<1):
@@ -86,12 +95,22 @@ def home(request,page=None):
   #   list_item_expenses = Expense.objects.all()[:NUMBER_ITENS]
   # else:
   #   list_item_expenses = Expense.objects.all()
-
-
-
   
-
   
+  # para ja vir com a porcentagem de limite utilizado definida no primeiro load da tela
+  first_date_in_list_of_dates = return_list_of_months_and_years_formated()[0]
+  _month = first_date_in_list_of_dates['month_number']
+  _year = first_date_in_list_of_dates['year']
+
+  total = Expense.objects.filter(date__month=_month,date__year=_year).aggregate(total=Sum('value'))
+  limit = None
+  if Limit.objects.filter(month=_month,year=_year).exists():
+    limit = Limit.objects.get(month=_month,year=_year).value
+  total_expenses = total['total']
+  percent = int(100*total_expenses/limit) if limit is not None else '??'
+  
+  total_current_month = total
+    
   context = {
      'page_selected': "home",
      'total_current_month': total_current_month['total'],
@@ -101,8 +120,8 @@ def home(request,page=None):
      'list_month_year_select': list_month_year_select,
      'list_item_expenses': list_item_expenses,
      'num_pages': num_pages,
-     'current_page': current_page
-
+     'current_page': current_page,
+     'percent': percent
   }
   return render(request,"expenses/main.html", context)
   # return render(request,"base.html", context={})
@@ -119,8 +138,45 @@ def report(request):
   }
   return render(request,"expenses/report.html", context)
 
+def expenses_by_period(request, dates= None):
+  list_month_year_select = return_list_of_months_and_years_formated()
+  start_month = list_month_year_select[0]['month_number']
+  start_year = list_month_year_select[0]['year']
+  end_month = list_month_year_select[0]['month_number']
+  end_year = list_month_year_select[0]['year']
+  expenses = []
+  selected_start_date = None
+  selected_end_date = None
 
+  if dates is not None:
+    _dates = dates.split('-')
+    start_month = _dates[0]
+    start_year = _dates[1]
+    end_month = _dates[2]
+    end_year = _dates[3]
+    
+    selected_start_date = f'{_dates[0]}-{_dates[1]}'
+    selected_end_date = f'{_dates[2]}-{_dates[3]}'
 
+    expenses = Expense.objects.filter(date__gte=f'{start_year}-{start_month}-01')
+
+    expenses = expenses.filter(date__lte=f'{end_year}-{end_month}-28')
+  else :
+    expenses = Expense.objects.filter(date__gte=f'{start_year}-{start_month}-01')
+
+    expenses = expenses.filter(date__lte=f'{end_year}-{end_month}-28')
+
+  context = {
+    'page_selected': "report",
+    'list_month_year_select': list_month_year_select,
+    'expenses': expenses,
+    'selected_start_date': selected_start_date,
+    'selected_end_date': selected_end_date
+  }
+  
+  return render(request, "expenses/reports/expenses-by-period.html", context)
+
+@csrf_exempt
 def list_expenses_by_category(request):
   if request.method == 'POST':
     form = SelectCategoryForm(request.POST)
@@ -139,28 +195,26 @@ def list_expenses_by_category(request):
   }
   return render(request,'expenses/list-expenses-by-category.html',context)
 
-from django.http import JsonResponse
+@csrf_exempt
 def get_total_expenses_ajax(request):
   if (request.method == 'GET'):
     values = request.GET['value'].split('-')
     month_selected = values[0]
     year_selected = values[1]
-    total = Expense.objects.filter(date__month=month_selected,date__year=year_selected).aggregate(total=Sum('value'))
+    total = Expense.objects.filter(date__month=int(month_selected),date__year=int(year_selected)).aggregate(total=Sum('value'))
     total_expenses = total['total']
     percent = '??'
-    if Limit.objects.filter(month=month_selected,year=year_selected).exists():
+    if Limit.objects.filter(month=month_selected,year=year_selected).exists() and total_expenses is not None:
       limit = Limit.objects.get(month=month_selected,year=year_selected).value
       percent = int(100*total_expenses/limit)
+    
     response = {
       'data':total_expenses,
       'percent':f'{percent} %'
     }
+    return JsonResponse(response, status = 200)
 
-  return JsonResponse(response, status = 200)
-
-from expenses.forms import ExpenseForm
-from django.template.loader import render_to_string
-
+@csrf_exempt
 def create_expense(request):
   title = 'Inserir Gasto'
   context_extra = {}
@@ -204,21 +258,101 @@ def handle_category(request):
   }
   return JsonResponse(response, status = 200)
 
-
+@csrf_exempt
 def handle_limit(request):
   title = 'Inserir Limite'
+  context_extra = {}
+    
+  if request.POST.get('action') == 'post':
+    form = LimitForm(request.POST)
+    
+    if form.is_valid():
+      model = form.save(commit=False)
+      model.save()
+      context_extra = {
+          'response' : 'Criado com sucesso!',
+          'error': False,
+      }
+    else:
+      context_extra = {
+          'response' : 'Erros ocorreram!',
+          'error': True
+      }   
+  else: 
+    exists = False
+    year = request.GET['year']
+    month = request.GET['month']
+
+    _limit = Limit(month=month, year=year)
+
+    # verificando se já existe limite para esse mês e ano para mandar os campos já preenchidos
+    exists = Limit.objects.filter(month=month, year=year).exists()
+    if exists:
+      _limit = Limit.objects.get(month=month, year=year)
+
+    form = LimitForm(instance=_limit)
+
+  context = {
+    'form': form,
+  }
+  html_page = render_to_string('expenses/form/handle-limit.html', context)
+  
   response = {
     'title' : title,
-    'html' : 'a fazer...',
-    
+    'html' : html_page,
+    'response' : context_extra['response'] if 'response' in context_extra else None,
+    'error': context_extra['error'] if 'error' in context_extra else None,
   }
   return JsonResponse(response, status = 200)
 
+@csrf_exempt
 def handle_payment(request):
   title = 'Inserir Forma de Pagamento'
+  context_extra = {}
+  response = {}
+  try:
+    if request.POST.get('action') == 'post':
+      form = PaymentForm(request.POST)
+      
+      if form.is_valid():
+        model = form.save(commit=False)
+        model.save()
+        context_extra = {
+            'response' : 'Criado com sucesso!',
+            'error': False,
+        }
+      else:
+        context_extra = {
+            'response' : 'Erros ocorreram!',
+            'error': True
+        }
+
+    else:
+          form = PaymentForm()
+    context = {
+      'form': form,
+    }
+    html_page = render_to_string('expenses/form/new-payment.html', context)
+    response = {
+      'title' : title,
+      'html' : html_page,
+      'response' : context_extra['response'] if 'response' in context_extra else None,
+      'error': context_extra['error'] if 'error' in context_extra else None,
+    }
+  except Exception as e:
+    print(e)
+  return JsonResponse(response, status = 200)
+
+def edit_expense(request):
+  title = 'Alterar Gasto'
+  expense = Expense.objects.get(id=request.GET['id'])
+  context = {
+    'expense': expense,
+  }
+  html_page = render_to_string('expenses/form/edit-expense.html', context)
   response = {
     'title' : title,
-    'html' : 'a fazer...',
+    'html' : html_page,
     
   }
   return JsonResponse(response, status = 200)

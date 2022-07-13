@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %} 
+{% block title %}Relatórios
+{%endblock %} 
+{% block style %}
+<link href="{% static 'expenses/css/report.css' %}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+<div class="report-container">
+  <h1>Visualizar gastos por período de tempo</h1>
+  <hr />
+  <div>
+    <div class="selection">
+      <form action="" request="POST" id="formSelectDates">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <span>De</span>
+          <select style="width: 130px;" id="list_start">
+              {% for item in list_month_year_select %}
+                  <option value="{{ item.month_number }}-{{ item.year }}" id="date-start">{{ item.year }}/{{ item.month|title }}</option>
+              {% endfor %}
+          </select>
+          <span>a</span>
+          <select style="width: 130px;" id="list_end">
+            {% for item in list_month_year_select %}
+                <option value="{{ item.month_number }}-{{ item.year }}" id="date-end">{{ item.year }}/{{ item.month|title }}</option>
+            {% endfor %}
+          </select>
+        <button class="btn btn-search" type="submit" value="Enviar">Buscar</button>
+      </form>
+      <div class="description-itens">
+        <p class="col-1">Data</p>
+        <p class="col-3">Descrição</p>
+        <p class="col-1">Categoria</p>
+        <p class="col-1">Forma Pagamento</p>
+        <p class="col-1">Valor</p>
+    </div>
+    {% for item in expenses %}
+    <div class="line-item">
+        <p class="col-1">{{ item.date|date:"d/m/Y" }}</p>
+        <p class="col-3">{{ item.description }}</p>
+        <p class="col-1">{{ item.category.description|title }}</p>
+        <p class="col-1">{{ item.payment.description|title }}</p>
+        <p class="col-1">R$ {{ item.value|floatformat:2 }}</p>
+    </div>
+    {% endfor %}
+  </div>
+    
+  
+  </div>
+</div>
+<script src="{% static 'expenses/js/jquery-3.6.0.min.js' %}"/></script>
+
+<script>
+    $(document).ready(function(){
+      {% comment %} $(".output").hide();
+      var csrftoken = getCookie('csrftoken');
+      function csrfSafeMethod(method) {
+          // these HTTP methods do not require CSRF protection
+          return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      $.ajaxSetup({
+          beforeSend: function (xhr, settings) {
+              if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+              }
+          }
+      });
+      function sameOrigin(url) {
+  
+      var host = document.location.host;
+      var protocol = document.location.protocol;
+      var sr_origin = '//' + host;
+      var origin = protocol + sr_origin;
+  
+      return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+      (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+  
+      !(/^(\/\/|http:|https:).*/.test(url));
+      }
+  
+      function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie != '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+          var cookie = jQuery.trim(cookies[i]);
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) == (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+          }
+      }
+      }
+      return cookieValue;
+      } {% endcomment %}
+
+      var paths = window.location.href.split('/')[5]
+
+      if(paths){
+        var teste = paths.split('-')
+
+        var start = `${teste[0]}-${teste[1]}`
+        var end = `${teste[2]}-${teste[3]}`
+  
+        $('select[id=list_start]').val(start).change()
+        $('select[id=list_end]').val(end).change()
+      }
+
+
+      $('#formSelectDates').on('submit', function(e){     
+          e.preventDefault();
+          date_end = $('select[id=list_end] option').filter(':selected').val()
+          date_start = $('select[id=list_start] option').filter(':selected').val()
+
+          window.location.href = '/report/expenses-by-period/'+date_start+'-'+date_end
+      }); 
+  })
+</script>
+{% endblock %}

@@ -7,6 +7,8 @@ class SelectCategoryForm(forms.Form):
     category = forms.ModelChoiceField(label="Categoria",queryset=Category.objects.all())
 
 from expenses.models import Expense
+from expenses.models import Limit
+from expenses.models import Payment
 
 from django.core.exceptions import ValidationError
 
@@ -27,3 +29,18 @@ class ExpenseForm(forms.ModelForm):
     #         raise ValidationError("É obrigatório adicionar o treinador.")
 
     #     return data
+    
+class LimitForm(forms.ModelForm):
+    class Meta:
+        model = Limit
+        fields = ['year','month','value']
+        labels = {
+            'year': 'Ano',
+            'value': 'Valor'
+        }
+
+class PaymentForm(forms.ModelForm): 
+    #formulário da classe payment
+    class Meta:
+        model = Payment
+        fields = '__all__'

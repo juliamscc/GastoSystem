@@ -22,6 +22,11 @@ urlpatterns = [
     path('delete/expense', delete_expense, name="delete_expense"),
 
 
+    path('edit/expense',edit_expense,name="edit_expense"),
+
+    #report
+    path('report/expenses-by-period', expenses_by_period,name="expenses_by_period"),
+    path('report/expenses-by-period/<str:dates>', expenses_by_period,name="expenses_by_period"),
 
     
 ]
