@@ -22,3 +22,15 @@
 .report-link > a {
   text-decoration: none;
 }
+
+.btn-search {
+  background-color: var(--color-red);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  width: 4.225em;
+  height: 27px;
+  padding: 0.15em .325em;
+}

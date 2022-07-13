@@ -23,6 +23,7 @@ urlpatterns = [
 
     #report
     path('report/expenses-by-period', expenses_by_period,name="expenses_by_period"),
+    path('report/expenses-by-period/<str:dates>', expenses_by_period,name="expenses_by_period"),
 
     
 ]

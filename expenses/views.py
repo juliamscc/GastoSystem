@@ -138,21 +138,25 @@ def report(request):
   }
   return render(request,"expenses/report.html", context)
 
-def expenses_by_period(request):
+def expenses_by_period(request, dates= None):
   list_month_year_select = return_list_of_months_and_years_formated()
   start_month = list_month_year_select[0]['month_number']
   start_year = list_month_year_select[0]['year']
   end_month = list_month_year_select[0]['month_number']
   end_year = list_month_year_select[0]['year']
   expenses = []
+  selected_start_date = None
+  selected_end_date = None
 
-  if request.method == 'POST':
-    date_start = request.POST['date_start'].split('-')
-    date_end = request.POST['date_end'].split('-')
-    start_month = date_start[0]
-    start_year = date_start[1]
-    end_month = date_end[0]
-    end_year = date_end[1]
+  if dates is not None:
+    _dates = dates.split('-')
+    start_month = _dates[0]
+    start_year = _dates[1]
+    end_month = _dates[2]
+    end_year = _dates[3]
+    
+    selected_start_date = f'{_dates[0]}-{_dates[1]}'
+    selected_end_date = f'{_dates[2]}-{_dates[3]}'
 
     expenses = Expense.objects.filter(date__gte=f'{start_year}-{start_month}-01')
 
@@ -165,9 +169,11 @@ def expenses_by_period(request):
   context = {
     'page_selected': "report",
     'list_month_year_select': list_month_year_select,
-    'expenses': expenses
+    'expenses': expenses,
+    'selected_start_date': selected_start_date,
+    'selected_end_date': selected_end_date
   }
-
+  
   return render(request, "expenses/reports/expenses-by-period.html", context)
 
 @csrf_exempt
