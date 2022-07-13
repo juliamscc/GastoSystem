@@ -222,3 +222,27 @@ def handle_payment(request):
     
   }
   return JsonResponse(response, status = 200)
+
+def delete_expense(request):
+  title = 'Deseja relamente deletar o gasto?'
+  context_extra = {}
+  context = {}
+  print(request.GET)
+  if request.GET.get('action') == 'delete':
+     id = request.GET.get('id')
+
+     Expense.objects.delete(id=id)
+     context_extra = {
+          'response' : 'Deletado com sucesso!',
+          'error': False,
+     }
+
+  html_page = render_to_string('expenses/form/delete-expense.html', context)
+  response = {
+    'title' : title,
+    'html' : html_page,
+    'response' : context_extra['response'] if 'response' in context_extra else None,
+    'error': context_extra['error'] if 'error' in context_extra else None,
+  }
+
+  return JsonResponse(response, status = 200)

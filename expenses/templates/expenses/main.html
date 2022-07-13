@@ -64,7 +64,7 @@
             <p class="col-1">R$ {{ item.value|floatformat:2 }}</p>
             <div class="action-item col-1">
                 <div class="btn-inline">
-                    <img class="svg-red" src="{% static 'expenses/img/icon/trash-can-solid.svg' %}" />
+                    <img class="svg-red action-modal" src="{% static 'expenses/img/icon/trash-can-solid.svg' %}" data-action="delete-expense" data-id="{{item.id}}"/>
                 </div>
                 <div class="btn-inline">
                     <img src="{% static 'expenses/img/icon/edit-solid.svg' %}" />
@@ -135,14 +135,22 @@
                 'handle-limit': "{% url 'expenses:handle_limit' %}",
                 'handle-payment': "{% url 'expenses:handle_payment' %}",
                 'handle-category': "{% url 'expenses:handle_category' %}",
+                'delete-expense': "{% url 'expenses:delete_expense' %}",
             }
 
             $(".action-modal").on('click', function(){
                 //console.log($(this).data().action)
+                new_data = {}
+                if($(this).data().action == 'delete-expense'){
+                    new_data = {
+                        id: $(this).data().id,
+                    }
+                }
                 
                 $.ajax({
                     type: 'GET',
                     url: action_modal[$(this).data().action],
+                    data: new_data,
                     success: function (response) {
                         $('.modal-description').text(response.title);
                         $('.modal-content').html(response.html);

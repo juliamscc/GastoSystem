@@ -19,6 +19,9 @@ urlpatterns = [
     path('handle/limit', handle_limit, name="handle_limit"),
     path('handle/payment', handle_payment, name="handle_payment"),
     path('handle/category', handle_category, name="handle_category"),
+    path('delete/expense', delete_expense, name="delete_expense"),
+
+
 
     
 ]
